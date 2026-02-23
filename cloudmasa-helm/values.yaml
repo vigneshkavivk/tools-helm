@@ -3,10 +3,10 @@ replicaCount: 2
 image:
   server:
     repository: vigneshkavi/cloudmasa-server
-    tag: latest
+    tag: v0.0
   client:
     repository: vigneshkavi/cloudmasa-client
-    tag: latest
+    tag: v0.0
 
 service:
   server:
