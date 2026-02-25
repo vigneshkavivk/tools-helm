@@ -1,0 +1,19 @@
+mongodb:
+  image: mongo:7
+  username: admin
+  password: password123
+  storage: 2Gi
+
+mongoExpress:
+  image: mongo-express
+  port: 8081
+
+server:
+  image: cloudmasa-server:1.0
+  port: 3000
+  replicaCount: 1
+
+client:
+  image: cloudmasa-client:1.0
+  port: 80
+  replicaCount: 1
