@@ -1,0 +1,17 @@
+{{- if .Values.sgTestConnection.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    "helm.sh/hook": test
+  labels:
+    {{- include "sourcegraph.labels" . | nindent 4 }}
+  name: "sg-test-connection"
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['sourcegraph-frontend:30080/']
+  restartPolicy: Never
+{{- end }}

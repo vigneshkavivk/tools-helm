@@ -1,0 +1,52 @@
+apiVersion: v2
+appVersion: "25.2.0"
+description: |
+  ReportPortal.io is a TestOps service, that provides increased capabilities
+  to speed up results analysis and reporting through the use of built-in analytic features.
+name: reportportal
+version: 25.12.19
+sources:
+  - https://github.com/reportportal/kubernetes/tree/master/reportportal
+keywords:
+  - reportportal
+  - report portal
+  - test results reporting service
+  - test report dashboard
+  - test automation reporting tools
+  - test automation results dashboard
+  - qa automation dashboard
+  - qa metrics dashboard
+  - automation test report
+  - test execution dashboard
+home: https://reportportal.io
+icon: https://raw.githubusercontent.com/reportportal/branding/a4e0ac59ff51e1081d4fa754f1a06f22ea6dcfe7/logo/Logo_Symbol_Large_Ogriginal.svg
+annotations:
+  category: Infrastructure
+  licenses: Apache-2.0
+maintainers:
+  - name: reportportal
+    email: support@reportportal.io
+
+# IMPORTANT: When updating any dependency version below, you must also update the corresponding image tag in values.yaml
+# This ensures the Helm chart uses the same version as the container images
+dependencies:
+  # PostgreSQL dependency - update postgresql.image.tag in values.yaml when changing this version
+  - name: postgresql
+    version: 16.7.21
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.install
+  # RabbitMQ dependency - update rabbitmq.image.tag in values.yaml when changing this version
+  - name: rabbitmq
+    version: 16.0.11
+    repository: https://charts.bitnami.com/bitnami
+    condition: rabbitmq.install
+  # OpenSearch dependency - update opensearch.image.tag in values.yaml when changing this version
+  - name: opensearch
+    version: 2.36.0
+    repository: https://opensearch-project.github.io/helm-charts/
+    condition: opensearch.install
+  # MinIO dependency - update minio.image.tag in values.yaml when changing this version
+  - name: minio
+    version: 17.0.16
+    repository: https://charts.bitnami.com/bitnami
+    condition: minio.install

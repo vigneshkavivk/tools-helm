@@ -1,0 +1,314 @@
+# Default values for OpenMetadata.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+
+openmetadata:
+
+  config:
+    upgradeMigrationConfigs:
+      debug: false
+      additionalArgs: ""
+    deployPipelinesConfig:
+      enabled: true
+      debug: false
+      additionalArgs: ""
+    reindexConfig:
+      enabled: true
+      debug: false
+      additionalArgs: ""
+    logLevel: INFO
+    clusterName: openmetadata
+    openmetadata:
+      host: "0.0.0.0"
+      port: 8585
+      adminPort: 8586
+      maxThreads: 50
+      minThreads: 10
+      idleThreadTimeout: "1 minute"
+    elasticsearch:
+      enabled: true
+      host: opensearch
+      searchType: opensearch
+      port: 9200
+      scheme: http
+      clusterAlias: ""
+      payLoadSize: 10485760
+      connectionTimeoutSecs: 5
+      socketTimeoutSecs: 60
+      batchSize: 100
+      searchIndexMappingLanguage: "EN"
+      keepAliveTimeoutSecs: 600
+      trustStore:
+        enabled: false
+        path: ""
+        password:
+          secretRef: "elasticsearch-truststore-secrets"
+          secretKey: "openmetadata-elasticsearch-truststore-password"
+      auth:
+        enabled: false
+        username: "elasticsearch"
+        password:
+          secretRef: elasticsearch-secrets
+          secretKey: openmetadata-elasticsearch-password
+    database:
+      enabled: true
+      host: mysql
+      port: 3306
+      driverClass: com.mysql.cj.jdbc.Driver
+      dbScheme: mysql
+      databaseName: openmetadata_db
+      auth:
+        username: root                     # ✅
+        password:
+          secretRef: mysql
+          secretKey: mysql-root-password   # ✅
+      dbParams: "allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC"
+      maxSize: 50
+      minSize: 10
+      initialSize: 10
+      checkConnectionWhileIdle: true
+      checkConnectionOnBorrow: true
+      evictionInterval: 5 minutes
+      minIdleTime: 1 minute
+    pipelineServiceClientConfig:
+      enabled: false
+      className: "org.openmetadata.service.clients.pipeline.airflow.AirflowRESTClient"
+      apiEndpoint: http://openmetadata-dependencies-api-server:8080
+      metadataApiEndpoint: http://openmetadata:8585/api
+      verifySsl: "no-ssl"
+      hostIp: ""
+      ingestionIpInfoEnabled: false
+      healthCheckInterval: 300
+      sslCertificatePath: "/no/path"
+      auth:
+        enabled: true
+        username: admin
+        password:
+          secretRef: airflow-secrets
+          secretKey: openmetadata-airflow-password
+        trustStorePath: ""
+        trustStorePassword:
+          secretRef: ""
+          secretKey: ""
+    authorizer:
+      enabled: true
+      className: "org.openmetadata.service.security.DefaultAuthorizer"
+      containerRequestFilter: "org.openmetadata.service.security.JwtFilter"
+      initialAdmins:
+        - "admin@openmetadata.org"
+      allowedEmailRegistrationDomains:
+        - "all"
+      principalDomain: ""
+      allowedDomains: []
+      enforcePrincipalDomain: false
+      enableSecureSocketConnection: false
+      useRolesFromProvider: false
+    authentication:
+      enabled: true
+      provider: "basic"
+      publicKeys:
+        - "http://openmetadata:8585/api/v1/system/config/jwks"
+      jwtPrincipalClaims:
+        - "email"
+        - "preferred_username"
+        - "sub"
+      enableSelfSignup: true
+      # 🔒 CRITICAL: Explicitly nullify unused fields to prevent Helm/Argo CD drift
+      clientType: "public"
+      clientId: "dummy"
+      authority: "https://dummy.com"
+      callbackUrl: "https://dummy.com/callback"
+      responseType: "code"
+    jwtTokenConfiguration:
+      enabled: true
+      rsapublicKeyFilePath: "./conf/public_key.der"
+      rsaprivateKeyFilePath: "./conf/private_key.der"
+      jwtissuer: "open-metadata.org"
+      keyId: "Gb389a-9f76-gdjs-a92j-0242bk94356"
+    fernetkey:
+      value: "jJ/9sz0g0OHxsfxOoSfdFdmk3ysNmPRnH3TUAbz3IHA="
+      secretRef: ""
+      secretKey: ""
+    eventMonitor:
+      enabled: true
+      type: prometheus
+      batchSize: 10
+      pathPattern:
+        - "/api/v1/tables/*"
+        - "/api/v1/health-check"
+      latency: []
+    secretsManager:
+      enabled: true
+      provider: db
+      prefix: ""
+      tags: []
+      additionalParameters:
+        enabled: false
+        region: ""
+    web:
+      enabled: true
+      uriPath: "/api"
+      hsts:
+        enabled: false
+        maxAge: "365 days"
+        includeSubDomains: "true"
+        preload: "true"
+      frameOptions:
+        enabled: false
+        option: "SAMEORIGIN"
+        origin: ""
+      contentTypeOptions:
+        enabled: false
+      xssProtection:
+        enabled: false
+        onXss: true
+        block: true
+      csp:
+        enabled: false
+        policy: "default-src 'self'"
+        reportOnlyPolicy: ""
+      referrerPolicy:
+        enabled: false
+        option: "SAME_ORIGIN"
+      permissionPolicy:
+        enabled: false
+        option: ""
+      cacheControl: ""
+      pragma: ""
+    rdf:
+      enabled: false
+      baseUri: "https://open-metadata.org/    "
+      storageType: "FUSEKI"
+      remoteEndpoint: "http://localhost:3030/openmetadata"
+      username: ""
+      password:
+        secretRef: ""
+        secretKey: ""
+
+networkPolicy:
+  enabled: false
+
+# ✅ Key: Define initial admin + override any leftover auth env vars
+extraEnvs:
+  - name: OM_INITIAL_ADMIN_EMAIL
+    value: "admin@openmetadata.org"
+  - name: OM_INITIAL_ADMIN_PASSWORD
+    value: "admin@123"
+  
+
+image:
+  repository: docker.getcollate.io/openmetadata/server
+  tag: ""
+  pullPolicy: "Always"
+
+sidecars: []
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "openmetadata"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+automountServiceAccountToken: true
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8585
+  adminPort: 8586
+  annotations: {}
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  annotations: {}
+  labels: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: open-metadata.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+extraInitContainers: []
+preMigrateInitContainers: []
+
+resources:
+  requests:
+    memory: "1Gi"
+    cpu: "0.5"
+  limits:
+    memory: "2Gi"
+    cpu: "1"
+
+startingDeadlineSeconds: 100
+
+testConnection:
+  resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  failureThreshold: 5
+  httpGet:
+    path: /api/v1/system/health
+    port: http
+
+readinessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  failureThreshold: 5
+  httpGet:
+    path: /api/v1/system/health
+    port: http
+
+startupProbe:
+  initialDelaySeconds: 90
+  periodSeconds: 15
+  failureThreshold: 12
+  successThreshold: 1
+  httpGet:
+    path: /healthcheck
+    port: http-admin
+
+podDisruptionBudget:
+  enabled: false
+  config:
+    maxUnavailable: "1"
+    minAvailable: "1"
+
+commonLabels: {}
+deploymentAnnotations: {}
+podAnnotations: {}
+
+hpa:
+  enabled: false
+  apiVersion: autoscaling/v2
+  minReplicas: 1
+  maxReplicas: 5
+  behavior: {}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

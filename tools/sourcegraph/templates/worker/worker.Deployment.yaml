@@ -1,0 +1,28 @@
+{{- $globalBlocklist := "" }}
+{{- if .Values.worker.blocklist }}
+{{- $globalBlocklist = join "," (.Values.worker.blocklist | uniq | sortAlpha) }}
+{{- end }}
+
+{{- if not .Values.worker.replicas }}
+  {{- include "sourcegraph.worker" (list . "" "" $globalBlocklist .Values.worker.resources ) | nindent 0 }}
+{{- else }}
+  {{- $dedicatedJobs := list }}
+  {{- $dedicatedJobs = $dedicatedJobs | concat .Values.worker.blocklist }}
+  {{- range .Values.worker.replicas }}
+    {{- $dedicatedJobs = $dedicatedJobs | concat .jobs }}
+  {{- end }}
+  {{- $primaryBlocklist := join "," ($dedicatedJobs | uniq | sortAlpha) }}
+---
+  {{-  include "sourcegraph.worker" (list . "" "all" $primaryBlocklist $.Values.worker.resources) | nindent 0 }}
+
+  {{- range $idx, $item := .Values.worker.replicas }}
+---
+    {{- $replicaName := printf "%d" $idx }}
+    {{- $allowlist := join "," ($item.jobs | uniq | sortAlpha) }}
+    {{- $resources := $.Values.worker.resources -}}
+    {{- if $item.resources -}}
+    {{- $resources = $item.resources -}}
+    {{- end -}}
+    {{- include "sourcegraph.worker" (list $ $replicaName $allowlist "" $resources) | nindent 0 }}
+  {{- end }}
+{{- end }}

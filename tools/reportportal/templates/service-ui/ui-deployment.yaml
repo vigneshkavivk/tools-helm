@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "reportportal.fullname" . }}-ui
+  labels: {{ include "labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.serviceui.replicaCount | default 1 }}
+  {{- with .Values.serviceui.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      component: {{ include "reportportal.fullname" . }}-ui
+  template:
+    metadata:
+      labels:
+        {{- range $key, $value := .Values.serviceui.podLabels }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+        component: {{ include "reportportal.fullname" . }}-ui
+      annotations:
+        {{- range $key, $value := .Values.serviceui.podAnnotations }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+    spec:
+      {{- with .Values.serviceui.affinity }}
+      affinity:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      {{- if .Values.serviceui.extraInitContainers }}
+        {{ toYaml .Values.serviceui.extraInitContainers | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ $.Values.serviceui.name | default "ui" }}
+        image: "{{ include "reportportal.image" (dict "Values" .Values "service" "serviceui") }}"
+        imagePullPolicy: "{{ .Values.serviceui.pullPolicy }}"
+        env:
+        - name: RP_SERVER_PORT
+          value: "8080"
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            cpu: {{ .Values.serviceui.resources.requests.cpu }}
+            memory: {{ .Values.serviceui.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.serviceui.resources.limits.cpu }}
+            memory: {{ .Values.serviceui.resources.limits.memory }}
+        {{- if .Values.serviceui.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: "/ui/health"
+            port: 8080
+          initialDelaySeconds: {{ .Values.serviceui.readinessProbe.initialDelaySeconds | default 30 }}
+          periodSeconds: {{ .Values.serviceui.readinessProbe.periodSeconds | default 10 }}
+          timeoutSeconds: {{ .Values.serviceui.readinessProbe.timeoutSeconds | default 5 }}
+          failureThreshold: {{ .Values.serviceui.readinessProbe.failureThreshold | default 3 }}
+          successThreshold: {{ .Values.serviceui.readinessProbe.successThreshold | default 1 }}
+        {{- end }}
+        {{- if .Values.serviceui.livenessProbe.enabled }}
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: {{ .Values.serviceui.livenessProbe.initialDelaySeconds | default 60 }}
+          periodSeconds: {{ .Values.serviceui.livenessProbe.periodSeconds | default 30 }}
+          timeoutSeconds: {{ .Values.serviceui.livenessProbe.timeoutSeconds | default 5 }}
+          failureThreshold: {{ .Values.serviceui.livenessProbe.failureThreshold | default 3 }}
+        {{- end }}
+        volumeMounts:
+          {{- if .Values.serviceui.extraVolumeMounts }}
+            {{ toYaml .Values.serviceui.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      volumes:
+        {{- if .Values.serviceui.extraVolumes }}
+          {{ toYaml .Values.serviceui.extraVolumes | nindent 8 }}
+        {{- end }}
+{{- if .Values.serviceui.nodeSelector }}
+      nodeSelector:
+        {{- range $key, $value := .Values.serviceui.nodeSelector }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+{{- end }}
+      securityContext:
+{{- include "reportportal.securityContext" (dict "Values" .Values "serviceContext" .Values.serviceui.securityContext) | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceui.serviceAccountName | default (include "reportportal.serviceAccountName" .) }}
+{{- with .Values.global.tolerations }}
+      tolerations: 
+{{- toYaml . | nindent 8 }}
+{{- else }}
+{{- with .Values.serviceui.tolerations }}
+      tolerations: 
+{{- toYaml . | nindent 8 }}
+{{- end }}
+{{- end }}

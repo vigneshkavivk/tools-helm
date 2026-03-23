@@ -1,0 +1,60 @@
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
+
+{{- if .Values.ingress.hosts}}
+ReportPortal is now available at:
+{{ toYaml .Values.ingress.hosts | indent 4 }}
+{{- end}}
+
+Welcome to ReportPortal, a TestOps service, that provides increased capabilities to speed up results analysis and reporting through the use of built-in analytic features.
+
+ReportPortal is a great addition to the Continuous Integration and Continuous Testing process. 
+
+ReportPortal is distributed under the Apache v2.0 license, and it is free to use and modify, even for commercial purposes.
+
+To get detailed information about all ReportPortal resources:
+  kubectl get all -l app={{ .Chart.Name }} -n {{ .Release.Namespace }}
+
+To view events in the namespace:
+  kubectl get events -n {{ .Release.Namespace }} --sort-by='.lastTimestamp'
+
+To view logs from a specific service:
+  kubectl logs -l component={{ include "reportportal.fullname" . }}-api -n {{ .Release.Namespace }}
+
+{{- if .Values.ingress.enable }}
+To check ingress status:
+  kubectl get ingress -l app={{ .Chart.Name }} -n {{ .Release.Namespace }}
+{{- end }}
+{{- if .Values.gatewayAPI.enable }}
+Gateway API HTTPRoute deployed successfully.
+
+To check HTTPRoute status:
+  kubectl get httproute -l app={{ .Chart.Name }} -n {{ .Release.Namespace }}
+{{- if .Values.gatewayAPI.gateway.create }}
+
+To check Gateway status:
+  kubectl get gateway -l app={{ .Chart.Name }} -n {{ .Release.Namespace }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.serviceapi.auditLogs.enable }}
+
+⚠️  WARNING: Audit logging is enabled!
+   Audit logs are written to an emptyDir volume on the node filesystem.
+   
+   Important considerations:
+   - Monitor node disk usage to prevent disk pressure issues
+   - Logs are lost when the pod is deleted or rescheduled
+   - Consider using a log collector (e.g., fluentbit) to ship logs to external storage
+   
+   To check audit log volume usage:
+     kubectl exec -it $(kubectl get pod -l component={{ include "reportportal.fullname" . }}-api -n {{ .Release.Namespace }} -o jsonpath='{.items[0].metadata.name}') -n {{ .Release.Namespace }} -- du -sh /var/log/reportportal/
+{{- if not .Values.serviceapi.auditLogs.sidecar.enable }}
+   
+   Note: The default log streamer sidecar is disabled.
+   Configure a custom log collector via extraVolumes and extraVolumeMounts if needed.
+{{- end }}
+{{- end }}
+
+For more information, visit: https://reportportal.io/docs

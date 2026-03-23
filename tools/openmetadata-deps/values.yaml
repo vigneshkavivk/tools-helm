@@ -1,0 +1,117 @@
+# Default values for deps.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  security:
+    allowInsecureImages: true
+
+mysql:
+  enabled: true
+  fullnameOverride: "mysql"
+  architecture: standalone
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/mysql
+    tag: 8.0.37-debian-12-r2
+    pullPolicy: "Always"
+  auth:
+    rootPassword: "metadata123"     # ✅ REQUIRED for readiness probe
+    username: openmetadata_user
+    password: openmetadata_password
+    database: openmetadata_db
+  primary:
+    extraFlags: "--sort_buffer_size=10M"
+    resources:
+      requests:
+        cpu: "100m"      # Reduced from default 500m
+        memory: "256Mi"  # Reduced from default 512Mi
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: "default"   # Matches your AKS default SC
+    service:
+      type: ClusterIP
+      port: 3306
+    startupProbe:
+      enabled: false
+    livenessProbe:
+      enabled: false
+    readinessProbe:
+      enabled: true
+
+opensearch:
+  enabled: false
+  clusterName: opensearch
+  fullnameOverride: opensearch
+  singleNode: true
+  imagePullPolicy: Always
+  opensearchJavaOpts: "-Xmx1536m -Xms1536m"
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: "azurefile-csi"
+    accessMode: ReadWriteMany
+  protocol: http
+  config:
+    opensearch.yml: |
+      plugins.security.disabled: true
+      indices.query.bool.max_clause_count: 4096
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1536Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+  extraEnvs:
+    - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+      value: "admin@123"
+
+airflow:
+  enabled: false
+  executor: "KubernetesExecutor"
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+  data:
+    metadataConnection:
+      protocol: mysql
+      host: mysql
+      port: 3306
+      user: airflow_user
+      pass: airflow_pass
+      db: airflow_db
+      sslmode: disable
+  webserver:
+    defaultUser:
+      enabled: true
+      username: admin
+      password: admin
+      email: admin@openmetadata.org
+  dags:
+    persistence:
+      enabled: true
+      storageClassName: "azurefile-csi"
+      accessMode: ReadWriteMany
+      size: 1Gi
+  logs:
+    persistence:
+      enabled: true
+      storageClassName: "azurefile-csi"
+      accessMode: ReadWriteMany
+      size: 1Gi
+  workers:
+    replicas: 0
+  triggerer:
+    enabled: false
+  flower:
+    enabled: false
+
+# ✅ CORRECT PLACE FOR statsd: top-level
+statsd:
+  enabled: false

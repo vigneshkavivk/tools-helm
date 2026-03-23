@@ -1,0 +1,18 @@
+suite: podDisruptionBudget
+release:
+  name: sourcegraph
+  namespace: sourcegraph
+tests:
+- it: should render podDisruptionBudget for frontend
+  template: frontend/sourcegraph-frontend.PodDisruptionBudget.yaml
+  set:
+    frontend:
+      podDisruptionBudget:
+        minAvailable: 1
+  asserts:
+  - equal:
+      path: spec.minAvailable
+      value: 1
+  - equal:
+      path: spec.selector.matchLabels.app
+      value: sourcegraph-frontend

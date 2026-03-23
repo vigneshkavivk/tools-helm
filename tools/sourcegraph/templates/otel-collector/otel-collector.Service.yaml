@@ -1,0 +1,36 @@
+{{- if .Values.openTelemetry.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/port: "8888"
+    sourcegraph.prometheus/scrape: "true"
+    {{- if .Values.openTelemetry.gateway.serviceAnnotations }}
+    {{- toYaml .Values.openTelemetry.gateway.serviceAnnotations | nindent 4 }}
+    {{- end }}
+  labels:
+    {{- include "sourcegraph.labels" . | nindent 4 }}
+    {{- if .Values.openTelemetry.gateway.serviceLabels }}
+      {{- toYaml .Values.openTelemetry.gateway.serviceLabels | nindent 4 }}
+    {{- end }}
+    deploy: sourcegraph
+    app.kubernetes.io/component: otel-collector
+  name: otel-collector
+spec:
+  ports:
+    - name: grpc-otlp
+      port: 4317
+      protocol: TCP
+      targetPort: grpc-otlp
+    - name: http-metrics
+      port: 8888
+      targetPort: http-metrics
+    - name: http-otlp
+      port: 4318
+      protocol: TCP
+      targetPort: http-otlp
+  selector:
+    {{- include "sourcegraph.selectorLabels" . | nindent 4 }}
+    app: otel-collector
+  type: {{ .Values.openTelemetry.gateway.serviceType | default "ClusterIP" }}
+{{- end }}

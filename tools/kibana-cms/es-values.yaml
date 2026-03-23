@@ -1,0 +1,25 @@
+clusterName: "elasticsearch"
+nodeGroup: "master"
+replicas: 1
+
+# Correct way to configure Elasticsearch in v8+ Helm chart
+elasticsearch:
+  config:
+    xpack.security.enabled: false
+    xpack.monitoring.enabled: false
+    xpack.watcher.enabled: false
+    xpack.ml.enabled: false
+    node.store.allow_mmapfs: false
+
+# Reduce resource requests for dev on AKS
+resources:
+  requests:
+    cpu: "200m"
+    memory: "512Mi"
+  limits:
+    cpu: "500m"
+    memory: "1Gi"
+
+# Disable persistence to avoid PVC + WaitForFirstConsumer issues
+persistence:
+  enabled: false

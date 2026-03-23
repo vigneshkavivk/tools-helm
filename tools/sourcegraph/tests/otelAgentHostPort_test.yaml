@@ -1,0 +1,75 @@
+---
+suite: otelAgentHostPort
+tests:
+  - it: should use the default host ports when not defined in values
+    template: otel-collector/otel-agent.DaemonSet.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 55679
+            hostPort: 55679
+            name: http-zpages
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 4317
+            hostPort: 4317
+            name: grpc-otlp
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 4318
+            hostPort: 4318
+            name: http-otlp
+  - it: should render the agent endpoint with the default gRPC host port
+    template: searcher/searcher.StatefulSet.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: "http://$(OTEL_AGENT_HOST):4317"
+  - it: should set the host ports when defined in values
+    template: otel-collector/otel-agent.DaemonSet.yaml
+    set:
+      openTelemetry:
+        agent:
+          hostPorts:
+            grpcOtlp: 4319
+            httpOtlp: 4320
+            httpZpages: 55680
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 55679
+            hostPort: 55680
+            name: http-zpages
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 4317
+            hostPort: 4319
+            name: grpc-otlp
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 4318
+            hostPort: 4320
+            name: http-otlp
+  - it: should render the agent endpoint with the custom gRPC host port
+    template: searcher/searcher.StatefulSet.yaml
+    set:
+      openTelemetry:
+        agent:
+          hostPorts:
+            grpcOtlp: 4319
+            httpOtlp: 4320
+            httpZpages: 55680
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: "http://$(OTEL_AGENT_HOST):4319"

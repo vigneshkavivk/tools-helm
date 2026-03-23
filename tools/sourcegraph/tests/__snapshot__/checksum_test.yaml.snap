@@ -1,0 +1,15 @@
+should update checksum when codeinsights-db secret is modified:
+  1: |
+    29f56ffb20b2f033b6f54a3b8e4f049734a9330390bc4e4b162a792e073b9447
+should update checksum when codeintel-db secret is modified:
+  1: |
+    839b4e7703dfa58ea8513e436a017af6183d7e5c3d8560a8d580bef8299242fb
+should update checksum when pgsql secret is modified:
+  1: |
+    54b0ee5944d429d618699fa4e18a406fb817668d9111bb43b46eac363415e5b2
+should update checksum when redis-cache secret is modified:
+  1: |
+    97d7112d6b8b0d3e6251d9062aaba1a7205fda567b701d70eecc4540878228c0
+should update checksum when redis-store secret is modified:
+  1: |
+    97d7112d6b8b0d3e6251d9062aaba1a7205fda567b701d70eecc4540878228c0
